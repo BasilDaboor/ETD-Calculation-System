@@ -12,6 +12,7 @@ function calculateCleats20() {
     document.getElementById('cleats20Result').textContent = `Cleats 20mm: ${cleats}`;
     calculateFoamTape();
 }
+ 
 
 function calculateCleats30() {
     const flange30 = parseFloat(document.getElementById('flange30').value) || 0;
@@ -71,7 +72,7 @@ function deleteWireMeshRow(rowId) {
     calculateTotalWireMesh();
 }
 
-function updateWireMeshRow(rowId, field, value) {
+function updateWireMeshRow(rowId, field, value, inputElement) {
     const row = wireMeshRows.find(r => r.id === rowId);
     if (row) {
         row[field] = parseFloat(value) || 0;
@@ -94,14 +95,26 @@ function updateWireMeshRow(rowId, field, value) {
         calculateTotalWireMesh();
         
         // Check if we need to add a new row
-        checkAndAddNewRow();
+        checkAndAddNewRow(inputElement);
     }
 }
 
-function checkAndAddNewRow() {
+function checkAndAddNewRow(currentInput) {
     const lastRow = wireMeshRows[wireMeshRows.length - 1];
     if (lastRow && lastRow.width > 0 && lastRow.height > 0) {
+        // Store the current active element before creating new row
+        const activeElement = currentInput || document.activeElement;
         createWireMeshRow();
+        
+        // Restore focus to the element that was being edited
+        if (activeElement && activeElement.tagName === 'INPUT') {
+            // Use setTimeout to ensure the DOM has updated
+            setTimeout(() => {
+                activeElement.focus();
+                // Restore cursor position to the end
+                activeElement.setSelectionRange(activeElement.value.length, activeElement.value.length);
+            }, 0);
+        }
     }
 }
 
@@ -125,7 +138,7 @@ function renderWireMeshRows() {
         widthInput.min = '0';
         widthInput.value = row.width > 0 ? row.width : '';
         widthInput.addEventListener('input', (e) => {
-            updateWireMeshRow(row.id, 'width', e.target.value);
+            updateWireMeshRow(row.id, 'width', e.target.value, e.target);
         });
         
         const multiplySymbol = document.createElement('span');
@@ -139,7 +152,7 @@ function renderWireMeshRows() {
         heightInput.min = '0';
         heightInput.value = row.height > 0 ? row.height : '';
         heightInput.addEventListener('input', (e) => {
-            updateWireMeshRow(row.id, 'height', e.target.value);
+            updateWireMeshRow(row.id, 'height', e.target.value, e.target);
         });
         
         const equalsSymbol = document.createElement('span');
